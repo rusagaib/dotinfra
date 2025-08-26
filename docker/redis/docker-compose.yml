@@ -1,0 +1,26 @@
+version: '3.8'
+
+services:
+  redis:
+    image: redis:7-alpine
+    container_name: ${APP_NAME}_redis_db
+    command: /bin/sh -c "redis-server --requirepass ${REDIS_PASSWORD}"
+    # restart: unless-stopped
+    ports:
+      - "${REDIS_PORT}:6379"
+    volumes:
+      - redis_data:/data
+      - ./redis.conf.template:/usr/local/etc/redis/redis.conf.template:ro
+      - ./entrypoint.sh:/usr/local/bin/entrypoint.sh:ro
+    environment:
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+      - REDIS_PORT=${REDIS_PORT}
+    networks:
+      - redis_network
+
+networks:
+  redis_network:
+
+volumes:
+  redis_data:
+    name: redis_data_${APP_NAME}

@@ -1,0 +1,11 @@
+protected-mode yes
+
+# Disable dangerous commands untuk security
+rename-command FLUSHDB ""
+rename-command FLUSHALL ""
+rename-command CONFIG ""
+
+# Optional memory management
+maxmemory 256mb
+maxmemory-policy allkeys-lru
+
