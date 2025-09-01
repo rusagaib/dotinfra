@@ -9,7 +9,17 @@ services:
     ports:
       - "${REDIS_PORT}:6379"
     volumes:
-      - redis_data:/data
+      # using docker named volume
+      # - redis_data:/data
+      # using docker bind volume
+      # export APP_NAME=app1 atau terserah..
+      # sudo mkdir -p /mnt/hdd2/redis_data_${APP_NAME}
+      # sudo chown -R 1001:1001 /mnt/hdd2/redis_data_${APP_NAME}
+      # hapus bagian anotasi volumes: bawah 
+      # soalnya anotasi tsb hanya bisa dipake via named volume
+      # lalu volumes: di bagian anotasi services: seperti berikut
+      # - /mnt/hdd2/redis_data_${APP_NAME}:/data
+      - /home/rusagaib/repo/rlab/dotinfra/docker/redis/redis_data_${APP_NAME}:/data
       - ./redis.conf.template:/usr/local/etc/redis/redis.conf.template:ro
       - ./entrypoint.sh:/usr/local/bin/entrypoint.sh:ro
     environment:
@@ -21,6 +31,6 @@ services:
 networks:
   redis_network:
 
-volumes:
-  redis_data:
-    name: redis_data_${APP_NAME}
+# volumes:
+#   redis_data:
+#     name: redis_data_${APP_NAME}
