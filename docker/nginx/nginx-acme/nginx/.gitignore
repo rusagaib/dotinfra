@@ -1,0 +1,14 @@
+# Ignore everything
+/*.conf
+/*.conf.backup
+
+# But not .gitignore itself
+!.gitignore
+
+# Allow .gitkeep files
+!.gitkeep
+!.example
+
+# Allow directories (so Git can track empty dirs with .gitkeep)
+*/
+
