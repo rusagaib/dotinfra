@@ -1,0 +1,40 @@
+version: '3.8'
+
+services:
+  mariadb:
+  # mysql:
+    image: mariadb:10.6
+    # image: mysql:8.0
+    # container_name: mysql_db
+    container_name: ${APP_NAME}_maria_db
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+    ports:
+      - "3306:3306"
+    volumes:
+      # using docker named volume
+      # - mysql_data:/var/lib/mysql
+      # using docker bind volume
+      # export APP_NAME=golang-db
+      # sudo mkdir -p /mnt/hdd2/${APP_NAME}_maria_db 
+      # sudo chown -R 999:999 /mnt/hdd2/mysql_data_app_name
+      # hapus volumes: di anotasi bawah 
+      # soalnya anotasi hanya bisa dipake via named volume
+      # lalu:
+      # - /mnt/hdd2/mysql_data_${APP_NAME}:/var/lib/mysql
+      - /mnt/e/job/rlab/rlab2/dotinfra/docker/mysql/${APP_NAME}_maria_db:/var/lib/mysql
+      # - ${DB_DIR}:/var/lib/mysql
+      - ${MY_CNF_DIR}:/etc/mysql/conf.d/my.cnf:ro
+    networks:
+      - mysql_network
+
+# volumes:
+#   mysql_data:
+#     name: mysql_data_${APP_NAME}
+
+networks:
+  mysql_network:
+    driver: bridge
