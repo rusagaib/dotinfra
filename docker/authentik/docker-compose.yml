@@ -1,0 +1,119 @@
+services:
+  postgresql:
+    env_file:
+    - .env
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_USER=${POSTGRES_USER}
+    healthcheck:
+      interval: 30s
+      retries: 5
+      start_period: 20s
+      test:
+      - CMD-SHELL
+      - pg_isready -d $${POSTGRES_DB} -U $${POSTGRES_USER}
+      timeout: 5s
+    image: docker.io/library/postgres:16-alpine
+    container_name: authentik-hq-postgresql
+    restart: unless-stopped
+    volumes:
+    - database:/var/lib/postgresql/data
+    networks:
+        - backend
+  redis:
+    command: --save 60 1 --loglevel warning
+    healthcheck:
+      interval: 30s
+      retries: 5
+      start_period: 20s
+      test:
+      - CMD-SHELL
+      - redis-cli ping | grep PONG
+      timeout: 3s
+    image: docker.io/library/redis:alpine
+    container_name: authentik-hq-redis
+    restart: unless-stopped
+    volumes:
+    - redis:/data
+    networks:
+        - backend
+  server:
+    command: server
+    depends_on:
+      postgresql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    env_file:
+    - .env
+    environment:
+      - AUTHENTIK_POSTGRESQL__HOST=postgresql
+      - AUTHENTIK_POSTGRESQL__NAME=${POSTGRES_DB}
+      - AUTHENTIK_POSTGRESQL__PASSWORD=${POSTGRES_PASSWORD}
+      - AUTHENTIK_POSTGRESQL__USER=${POSTGRES_USER}
+      - AUTHENTIK_REDIS__HOST=redis
+      - AUTHENTIK_ERROR_REPORTING__ENABLED=true
+      - AUTHENTIK_SECRET_KEY=${AUTHENTIK_SECRET_KEY}
+    image: ${AUTHENTIK_IMAGE:-ghcr.io/goauthentik/server}:${AUTHENTIK_TAG:-2025.8.1}
+    container_name: authentik-hq-server
+    ports:
+    - ${COMPOSE_PORT_HTTP:-9000}:9000
+    - ${COMPOSE_PORT_HTTPS:-9443}:9443
+    restart: unless-stopped
+    volumes:
+    - ./media:/media
+    - ./custom-templates:/templates
+    networks:
+        - frontend
+        - backend
+        - rfproxy
+  worker:
+    command: worker
+    depends_on:
+      postgresql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    env_file:
+    - .env
+    environment:
+      - AUTHENTIK_POSTGRESQL__HOST=postgresql
+      - AUTHENTIK_POSTGRESQL__NAME=${POSTGRES_DB}
+      - AUTHENTIK_POSTGRESQL__PASSWORD=${POSTGRES_PASSWORD}
+      - AUTHENTIK_POSTGRESQL__USER=${POSTGRES_USER}
+      - AUTHENTIK_REDIS__HOST=redis
+      - AUTHENTIK_SECRET_KEY=${AUTHENTIK_SECRET_KEY}
+    image: ${AUTHENTIK_IMAGE:-ghcr.io/goauthentik/server}:${AUTHENTIK_TAG:-2025.8.1}
+    container_name: authentik-hq-worker
+    restart: unless-stopped
+    user: root
+    volumes:
+    - /var/run/docker.sock:/var/run/docker.sock
+    - ./media:/media
+    - ./certs:/certs
+    - ./custom-templates:/templates
+    networks:
+        - frontend 
+        - backend
+        - rfproxy
+volumes:
+  database:
+    name: authentik-hq-postgresql
+    # driver: local
+  redis:
+    name: authentik-hq-redis
+    # driver: local
+networks:
+  # frontend:
+  #   external: true
+  # backend:
+  #   external: true
+  frontend:
+    driver: bridge
+  backend:
+    driver: bridge 
+  rfproxy:
+    external: true
+  
+  

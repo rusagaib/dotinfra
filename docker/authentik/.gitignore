@@ -1,0 +1,14 @@
+# Ignore everything in certs
+/certs/*
+
+# But allow mtls folder itself
+!/certs/mtls/
+
+# Ignore everything inside mtls
+/certs/mtls/*
+
+# Except .gitkeep in mtls
+!/certs/mtls/.gitkeep
+
+.env
+*.backup
