@@ -1,0 +1,20 @@
+version: '3.1'
+
+networks:
+  cf-tunnel:
+    external: true
+
+services:
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    container_name: cloudpler
+    environment:
+      - TZ=Asia/Jakarta
+      - TUNNEL_TOKEN=${TOKEN}
+    # restart: unless-stopped
+    command: tunnel --no-autoupdate run
+    networks:
+      - cf-tunnel
+    # dns:
+    #   - 192.168.110.1
+    #   - 1.1.1.1
